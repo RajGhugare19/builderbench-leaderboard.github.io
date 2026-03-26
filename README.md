@@ -1,9 +1,9 @@
 # BuilderBench Leaderboard
 
-This repo hosts the BuilderBench leaderboard at [builderbench-leaderboard.github.io](https://builderbench-leaderboard.github.io). All leaderboard data lives as plain JSON files under `data/`. To add results, you generate a `tmp/` folder containing your results from the [builderbench](https://github.com/RajGhugare19/builderbench) repo, drop it here, and simply run one script. The instructions on how to run your agent and get the results in a `tmp/` folder can be found in the [builderbench](https://github.com/RajGhugare19/builderbench) repo.
+This repo hosts the BuilderBench leaderboard at [https://rajghugare19.github.io/builderbench-leaderboard/](https://rajghugare19.github.io/builderbench-leaderboard/
+). All leaderboard data lives as plain JSON files under `data/`. To add results, you generate a `tmp/` folder containing your results from the [builderbench](https://github.com/RajGhugare19/builderbench) repo, drop it here, and simply run one script. The instructions on how to run your agent and get the results in a `tmp/` folder can be found in the [builderbench](https://github.com/RajGhugare19/builderbench) repo.
 
 ---
-
 ## How to submit results
 
 ### Step 1 — Run your agent and generate the `tmp/` folder
