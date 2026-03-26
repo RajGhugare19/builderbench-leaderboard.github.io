@@ -1,0 +1,47 @@
+{
+  "level_id": "cube-50-task-2",
+  "entries": [
+    {
+      "agent_name": "cot",
+      "model_id": "gpt-5.2-2025-12-11",
+      "website_url": "https://openai.com/index/introducing-gpt-5-2/",
+      "date": "2026-03-06",
+      "num_seeds": 1,
+      "level_id": "cube-50-task-2",
+      "mean_final_success_rate": 0.0,
+      "mean_final_progress": 0.06,
+      "std_final_success_rate": 0.0,
+      "std_final_progress": 0.0,
+      "mean_num_episodes": 1.0,
+      "std_num_episodes": 0.0
+    },
+    {
+      "agent_name": "reflexion",
+      "model_id": "claude-opus-4-6",
+      "website_url": "https://www.anthropic.com/news/claude-opus-4-6",
+      "date": "2026-03-18",
+      "num_seeds": 1,
+      "level_id": "cube-50-task-2",
+      "mean_final_success_rate": 0.0,
+      "mean_final_progress": 0.0,
+      "std_final_success_rate": 0.0,
+      "std_final_progress": 0.0,
+      "mean_num_episodes": 3.0,
+      "std_num_episodes": 0.0
+    },
+    {
+      "agent_name": "reflexion",
+      "model_id": "gemini-3-flash-preview",
+      "website_url": "https://ai.google.dev/gemini-api/docs/models/gemini-3-flash-preview",
+      "date": "2026-03-21",
+      "num_seeds": 1,
+      "level_id": "cube-50-task-2",
+      "mean_final_success_rate": 0.0,
+      "mean_final_progress": 0.0,
+      "std_final_success_rate": 0.0,
+      "std_final_progress": 0.0,
+      "mean_num_episodes": 3.0,
+      "std_num_episodes": 0.0
+    }
+  ]
+}

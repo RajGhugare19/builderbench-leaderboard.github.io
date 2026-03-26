@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BuilderBench Taskwise Leaderboard</title>
+    <style>
+        body { font-family: system-ui, sans-serif; padding: 24px; max-width: 980px; margin: 0 auto; }
+        h1 { margin: 0 0 50px; }
+        h2 { margin: 24px 0 8px; }
+        h3 { margin: 16px 0 8px; color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+        th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #eee; }
+        th { font-size: 0.9em; color: #555; }
+        .muted { color: #777; font-size: 0.85em; }
+        .std { color: #555; font-size: 0.8em; margin-left: 1px; }
+        a { color: #0066cc; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* Color-friendly row backgrounds */
+        .row-green { background-color: #dcfce7; } /* Soft Green for 80-100% */
+        .row-yellow { background-color: #fef9c3; } /* Soft Yellow for 50-80% */
+        .row-red { background-color: #fee2e2; } /* Soft Red for 0-50% */
+
+        /* Fine horizontal separator */
+        .separator { border: 0; border-top: 1px solid #eaeaea; margin: 32px 0; }
+
+        /* Difficulty toggle */
+        .difficulty-toggle {
+            display: inline-flex;
+            align-items: center;
+            background: #f1f5f9;
+            border-radius: 10px;
+            padding: 4px;
+            gap: 2px;
+            margin-bottom: 32px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .difficulty-toggle button {
+            padding: 8px 24px;
+            border: none;
+            border-radius: 7px;
+            font-size: 0.88em;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            background: transparent;
+            color: #64748b;
+        }
+        .difficulty-toggle button:hover:not(.active) {
+            background: #e2e8f0;
+            color: #334155;
+        }
+        .difficulty-toggle button.active {
+            background: #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04);
+            color: #0f172a;
+        }
+        .difficulty-toggle button.active.easy {
+            color: #15803d;
+        }
+        .difficulty-toggle button.active.hard {
+            color: #b91c1c;
+        }
+    </style>
+</head>
+<body>
+
+<h1>🏗️ BuilderBench Leaderboard</h1>
+<div id="content" class="muted">Loading…</div>
+
+<script>
+    const TASKS_URL = './data/tasks.json';
+
+    // Difficulty lookup derived from create_task_data.py
+    // Keys are task IDs (matching tasks.json), values are 'easy' or 'hard'
+    const TASK_DIFFICULTIES = {
+        'cube-1-task-1': 'easy',  // place-cube
+        'cube-1-task-2': 'easy',  // pick-cube
+        'cube-2-task-1': 'easy',  // stack
+        'cube-2-task-2': 'easy',  // horizontal_align
+        'cube-2-task-3': 'easy',  // permute
+        'cube-2-task-4': 'hard',  // double-horizontal-pick
+        'cube-2-task-5': 'hard',  // double-vertical-pick
+        'cube-3-task-1': 'easy',  // stack
+        'cube-3-task-2': 'hard',  // t-stack
+        'cube-3-task-3': 'easy',  // disassemble
+        'cube-3-task-4': 'hard',  // reverse-t-lift
+        'cube-3-task-5': 'hard',  // triangular-packing
+        'cube-3-task-6': 'easy',  // support-structure
+        'cube-4-task-1': 'easy',  // stack
+        'cube-4-task-2': 'easy',  // zig-zag-stack
+        'cube-4-task-3': 'hard',  // 2d-packing
+        'cube-4-task-4': 'hard',  // 4-pick
+        'cube-4-task-5': 'hard',  // maximum-overhang
+        'cube-4-task-6': 'easy',  // dual-tower-masked
+        'cube-5-task-1': 'easy',  // stack
+        'cube-5-task-2': 'easy',  // pyramid
+        'cube-5-task-3': 'easy',  // archway
+        'cube-5-task-4': 'hard',  // maximum-overhang
+        'cube-5-task-5': 'easy',  // archway-masked
+        'cube-6-task-1': 'easy',  // stack
+        'cube-6-task-2': 'easy',  // pyramid
+        'cube-6-task-3': 'hard',  // crab-hard
+        'cube-6-task-4': 'easy',  // pyramid-masked
+        'cube-6-task-5': 'hard',  // sword
+        'cube-7-task-1': 'easy',  // stack
+        'cube-7-task-2': 'easy',  // 2d-tokyo-tower
+        'cube-7-task-3': 'easy',  // zig-zag-tower-easy
+        'cube-7-task-4': 'hard',  // zig-zag tower hard
+        'cube-7-task-5': 'hard',  // 2-cross-base-tower
+        'cube-7-task-6': 'hard',  // jenga-tower
+        'cube-7-task-7': 'hard',  // maximum-overhang
+        'cube-8-task-1': 'easy',  // double-stack
+        'cube-8-task-2': 'easy',  // vertical-portal-easy
+        'cube-8-task-3': 'hard',  // vertical-portal-hard
+        'cube-8-task-4': 'hard',  // 2-cross-base-tower
+        'cube-8-task-5': 'hard',  // wall-and-cross-on-top
+        'cube-9-task-1': 'easy',  // double-stack
+        'cube-9-task-2': 'hard',  // flat-cube
+        'cube-9-task-3': 'hard',  // iglu
+        'cube-9-task-4': 'hard',  // leaning-tower
+        'cube-10-task-1': 'hard', // temple
+        'cube-15-task-1': 'hard', // archway
+        'cube-15-task-2': 'hard', // cantelliver-bridge
+        'cube-20-task-1': 'hard', // pyramid
+        'cube-50-task-1': 'hard', // castle
+        'cube-50-task-2': 'hard', // castle-archdoor
+    };
+
+    let currentDifficulty = 'hard';
+
+    // Keeps the layout from breaking if a name has <, >, &, or "
+    function escapeHtml(text) {
+        if (text == null) return '';
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function formatPercent(value) {
+        return value == null ? '' : `${(value * 100).toFixed(1)}`;
+    }
+
+    function formatPercentWithStd(value, std) {
+        const main = formatPercent(value);
+        if (!main) return '';
+        if (std == null) return main;
+        return `${main}<span class="std">±${formatPercent(std)}</span>`;
+    }
+
+    function formatNumber(value) {
+        return value == null ? '' : Number(value).toFixed(1);
+    }
+
+    function formatNumberWithStd(value, std) {
+        const main = formatNumber(value);
+        if (!main) return '';
+        if (std == null) return main;
+        return `${main}<span class="std">±${formatNumber(std)}</span>`;
+    }
+
+    function buildToggle() {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'difficulty-toggle';
+        wrapper.id = 'difficulty-toggle';
+
+        ['easy', 'hard'].forEach(diff => {
+            const btn = document.createElement('button');
+            btn.textContent = diff === 'easy' ? '🟢 Easy' : '🔴 Hard';
+            btn.dataset.diff = diff;
+            btn.className = diff === currentDifficulty ? `active ${diff}` : '';
+            btn.addEventListener('click', () => {
+                currentDifficulty = diff;
+                document.querySelectorAll('.difficulty-toggle button').forEach(b => {
+                    b.className = b.dataset.diff === diff ? `active ${diff}` : '';
+                });
+                renderContent();
+            });
+            wrapper.appendChild(btn);
+        });
+
+        return wrapper;
+    }
+
+    let allTasks = [];
+
+    function renderContent() {
+        const content = document.getElementById('content');
+        content.innerHTML = '';
+
+        const tasks = allTasks.filter(t => {
+            const diff = TASK_DIFFICULTIES[t.level_id];
+            return diff === currentDifficulty;
+        });
+
+        if (tasks.length === 0) {
+            content.innerHTML = `<p class="muted">No ${currentDifficulty} tasks found.</p>`;
+            return;
+        }
+
+        // --- SUMMARY TABLE ---
+        const summarySection = document.createElement('section');
+        const summaryTitle = document.createElement('h2');
+        summaryTitle.textContent = '🥇 Task wise best agents';
+        summaryTitle.style.marginBottom = '40px';
+        summarySection.appendChild(summaryTitle);
+
+        // Group tasks by cube number
+        const groupedTasks = {};
+        tasks.forEach(t => {
+            const match = String(t.level_id).match(/cube[\s\-_]*(\d+)/i);
+            const cubeNum = match ? match[1] : 'Other';
+            if (!groupedTasks[cubeNum]) groupedTasks[cubeNum] = [];
+            groupedTasks[cubeNum].push(t);
+        });
+
+        const cubeKeys = Object.keys(groupedTasks).sort((a, b) => {
+            if (a === 'Other') return 1;
+            if (b === 'Other') return -1;
+            return parseInt(a) - parseInt(b);
+        });
+
+        cubeKeys.forEach(cubeKey => {
+            const subTitle = document.createElement('h3');
+            subTitle.textContent = cubeKey === 'Other' ? 'Other Tasks' : `Cube ${cubeKey}`;
+            subTitle.style.marginTop = '24px';
+            summarySection.appendChild(subTitle);
+
+            const summaryTable = document.createElement('table');
+            let summaryHtml = `
+                <thead>
+                    <tr>
+                        <th>Task Name</th>
+                        <th>Agent Name</th>
+                        <th>Model ID</th>
+                        <th>Success Rate</th>
+                        <th>Progress</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            groupedTasks[cubeKey].forEach(t => {
+                const best = (t.entries && t.entries.length > 0) ? t.entries[0] : null;
+
+                let rowClass = '';
+                if (best && best.mean_final_success_rate != null) {
+                    const pct = best.mean_final_success_rate * 100;
+                    rowClass = pct >= 80 ? 'row-green' : pct >= 50 ? 'row-yellow' : 'row-red';
+                }
+
+                const safeId = escapeHtml(t.level_id).replace(/\s+/g, '-');
+
+                summaryHtml += `
+                    <tr class="${rowClass}">
+                        <td><strong><a href="#${safeId}">${escapeHtml(t.level_id)}</a></strong></td>
+                        <td>${best ? escapeHtml(best.agent_name) : 'N/A'}</td>
+                        <td>${best && best.model_id ? escapeHtml(best.model_id) : 'N/A'}</td>
+                        <td>${best ? formatPercentWithStd(best.mean_final_success_rate, best.std_final_success_rate) : 'N/A'}</td>
+                        <td>${best ? formatPercentWithStd(best.mean_final_progress, best.std_final_progress) : 'N/A'}</td>
+                        <td>${best && best.date ? escapeHtml(best.date) : 'N/A'}</td>
+                    </tr>
+                `;
+            });
+
+            summaryHtml += `</tbody>`;
+            summaryTable.innerHTML = summaryHtml;
+            summarySection.appendChild(summaryTable);
+        });
+
+        content.appendChild(summarySection);
+
+        // --- DETAILED TABLES ---
+        const detailHeading = document.createElement('h2');
+        detailHeading.textContent = 'Detailed Task-wise Leaderboards';
+        detailHeading.style.marginTop = '48px';
+        detailHeading.style.paddingTop = '24px';
+        detailHeading.style.marginBottom = '40px';
+        detailHeading.style.borderTop = '2px solid #eee';
+        content.appendChild(detailHeading);
+
+        tasks.forEach((task, index) => {
+            const section = document.createElement('section');
+            section.id = escapeHtml(task.level_id).replace(/\s+/g, '-');
+
+            const title = document.createElement('h3');
+            title.textContent = task.level_id;
+            section.appendChild(title);
+
+            const table = document.createElement('table');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Agent</th>
+                        <th>Model ID</th>
+                        <th>Success</th>
+                        <th>Progress</th>
+                        <th>Episodes</th>
+                        <th>Seeds</th>
+                        <th>Date</th>
+                        <th>Website</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${(task.entries || []).map(e => {
+                        let url = e.website_url;
+                        let linkHtml = (url && url !== 'N/A')
+                            ? `<a href="${escapeHtml(url)}" target="_blank">link</a>`
+                            : 'N/A';
+                        return `
+                        <tr>
+                            <td>${escapeHtml(e.agent_name)}</td>
+                            <td>${e.model_id ? escapeHtml(e.model_id) : ''}</td>
+                            <td>${formatPercentWithStd(e.mean_final_success_rate, e.std_final_success_rate)}</td>
+                            <td>${formatPercentWithStd(e.mean_final_progress, e.std_final_progress)}</td>
+                            <td>${formatNumberWithStd(e.mean_num_episodes, e.std_num_episodes)}</td>
+                            <td>${e.num_seeds ?? ''}</td>
+                            <td>${e.date ?? ''}</td>
+                            <td>${linkHtml}</td>
+                        </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            `;
+
+            section.appendChild(table);
+            content.appendChild(section);
+
+            if (index < tasks.length - 1) {
+                const hr = document.createElement('hr');
+                hr.className = 'separator';
+                content.appendChild(hr);
+            }
+        });
+    }
+
+    async function loadData() {
+        const content = document.getElementById('content');
+
+        try {
+            const response = await fetch(TASKS_URL);
+            const data = await response.json();
+
+            if (!data.tasks || data.tasks.length === 0) {
+                content.textContent = 'No data found.';
+                return;
+            }
+
+            allTasks = await Promise.all(
+                data.tasks.map(async (taskId) => {
+                    const taskResponse = await fetch(`./data/${taskId}.json`);
+                    return taskResponse.json();
+                })
+            );
+
+            content.classList.remove('muted');
+
+            // Insert toggle above the content div
+            const toggle = buildToggle();
+            content.parentNode.insertBefore(toggle, content);
+
+            renderContent();
+        } catch (e) {
+            console.error(e);
+            content.textContent = "Failed to load data.";
+        }
+    }
+
+    loadData();
+</script>
+
+</body>
+</html>
